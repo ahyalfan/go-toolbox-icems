@@ -23,13 +23,26 @@ func TestEncryptDecryptSucces(t *testing.T) {
 
 func TestEncryptDecryptErrorKey(t *testing.T) {
 	input := []byte("nik dari keluaragra yogi")
-	key = []byte("12345678901234567")
-	e, err := utils.EncryptText(input, key)
+	keyNew := []byte("12345678901234567")
+	e, err := utils.EncryptText(input, keyNew)
 	fmt.Println(err)
 	assert.Nil(t, e)
 	assert.NotNil(t, err)
 
-	hasil, err := utils.DecryptText(e, key)
+	hasil, err := utils.DecryptText(e, keyNew)
 	assert.Nil(t, hasil)
 	assert.NotNil(t, err)
+}
+
+func TestEncryptDecryptTextStringSucces(t *testing.T) {
+	input := "nik dari keluaragra yogi"
+	e, err := utils.EncryptTextString(input, string(key))
+	fmt.Println(err)
+	assert.Nil(t, err)
+	assert.NotNil(t, e)
+
+	hasil, err := utils.DecryptTextString(e, string(key))
+	fmt.Println(hasil)
+	assert.Nil(t, err)
+	assert.Equal(t, input, hasil)
 }
