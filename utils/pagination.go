@@ -5,45 +5,39 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/ahyalfan/go-toolbox-icems/utils/pagination"
 )
 
-type PagebleRequest struct {
-	Sort   string `query:"sort"`
-	SortBy string `query:"sort_by"`
-	Page   int    `query:"page"`
-	Limit  int    `query:"limit"`
-	Search string `query:"search"`
-}
-
-func ValidateAndPrepareRequest(pageble PagebleRequest) (PagebleRequest, error) {
-	if pageble.SortBy == "" {
-		pageble.SortBy = "created_at" // Default SortBy adalah created_at
+func ValidateAndPrepareRequest(pageable pagination.PageableRequestInterface) (pagination.PageableRequestInterface, error) {
+	if pageable.GetDefaultSortBy() == "" {
+		pageable.SetDefaultSortBy("created_at") // Default SortBy adalah created_at
 	}
 
-	if pageble.Sort == "" {
-		pageble.Sort = "asc" // Default Sort adalah ascending
+	if pageable.GetDefaultSort() == "" {
+		pageable.SetDefaultSort("asc") // Default Sort adalah ascending
 	} else {
-		pageble.Sort = strings.ToLower(pageble.Sort)
-		if pageble.Sort != "asc" && pageble.Sort != "desc" {
-			return pageble, errors.New("sort must be 'asc' or 'desc'")
+		pageable.SetDefaultSort(strings.ToLower(pageable.GetDefaultSort()))
+		if pageable.GetDefaultSort() != "asc" && pageable.GetDefaultSort() != "desc" {
+			return pageable, errors.New("sort must be 'asc' or 'desc'")
 		}
 	}
 
-	if pageble.Page <= 0 {
-		pageble.Page = 1 // Default Page adalah 1
+	if pageable.GetDefaultPage() <= 0 {
+		pageable.SetDefaultPage(1) // Default Page adalah 1
 	}
 
-	if pageble.Limit <= 0 {
-		pageble.Limit = 15 // Default Limit adalah 10
-	} else if pageble.Limit > 100 {
-		pageble.Limit = 100 // Batasi Limit maksimum 100
+	if pageable.GetDefaultLimit() <= 0 {
+		pageable.SetDefaultLimit(15) // Default Limit adalah 10
+	} else if pageable.GetDefaultLimit() > 100 {
+		pageable.SetDefaultLimit(100) // Batasi Limit maksimum 100
 	}
 
-	if len(pageble.Search) > 255 {
-		pageble.Search = pageble.Search[:255]
+	if len(pageable.GetDefaultSearch()) > 255 {
+		pageable.SetDefaultSearch(pageable.GetDefaultSearch()[:255])
 	}
 
-	return pageble, nil
+	return pageable, nil
 }
 
 func TotalPage(totalData int64, limit int) int {
@@ -57,6 +51,6 @@ func GenerateOffset(page, limit int) int {
 	return (page - 1) * limit
 }
 
-func FormatPaginationInfo(pageble PagebleRequest) string {
-	return fmt.Sprintf("Page: %d, Limit: %d, SortBy: %s, Sort: %s", pageble.Page, pageble.Limit, pageble.SortBy, pageble.Sort)
+func FormatPaginationInfo(pageable pagination.PageableRequestInterface) string {
+	return fmt.Sprintf("Page: %d, Limit: %d, SortBy: %s, Sort: %s", pageable.GetDefaultPage(), pageable.GetDefaultLimit(), pageable.GetDefaultSortBy(), pageable.GetDefaultSort())
 }
