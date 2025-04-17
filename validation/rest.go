@@ -10,7 +10,7 @@ import (
 func ValidateApiIsNilOrNotNil(data map[string]any) error {
 	for key, v := range data {
 		if reflect.ValueOf(v).IsNil() {
-			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("id %s not found in data referensi", key))
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("id %s not found in data get", key))
 		}
 	}
 	return nil
