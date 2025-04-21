@@ -1,14 +1,32 @@
 package pagination
 
+// Metadata contains the pagination details for a response,
+// including the total number of items (TotalData), total pages (TotalPage),
+// current page (Page), and the size (Size) of each page.
 type Metadata struct {
+	// TotalData is the total number of items across all pages.
 	TotalData int64 `json:"total_data"`
-	TotalPage int   `json:"total_page"`
-	Page      int   `json:"page"`
-	Size      int   `json:"size"`
+
+	// TotalPage is the total number of pages available, based on the limit per page.
+	TotalPage int `json:"total_page"`
+
+	// Page is the current page being requested.
+	Page int `json:"page"`
+
+	// Size is the number of items per page.
+	Size int `json:"size"`
 }
 
+// PageableResponse is a generic structure used to represent a paginated response
+// with data of type T and associated metadata such as total data, total pages,
+// current page, and page size.
 type PageableResponse[T any] struct {
-	Data     []T      `json:"data"`
+	// Data is the paginated data for the current page.
+	// It holds a slice of type T, which represents the actual items being requested.
+	Data []T `json:"data"`
+
+	// Metadata contains pagination information for the response, including total data, total pages,
+	// the current page, and the number of items per page.
 	Metadata Metadata `json:"metadata"`
 }
 
