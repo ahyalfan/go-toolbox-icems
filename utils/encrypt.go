@@ -4,7 +4,11 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/rsa"
+	"encoding/base64"
 	"io"
+
+	"github.com/ahyalfan/go-toolbox-icems/auth"
 )
 
 // EncryptText encrypts the given plaintext using AES encryption with CFB mode.
@@ -89,4 +93,39 @@ func EncryptTextString(inputString string, keyString string) ([]byte, error) {
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], input)
 
 	return ciphertext, nil
+}
+
+// EncryptTextStringRsa encrypts a plaintext string using RSA public key encryption.
+// The function reads a public key from the specified PEM file path and uses it to encrypt
+// the input string with PKCS#1 v1.5 padding. The resulting ciphertext is encoded in base64
+// for safe storage or transmission.
+//
+// Args:
+//   - inputString (string): The plaintext string to be encrypted.
+//   - path (string): The path to the RSA public key PEM file.
+//
+// Returns:
+//   - string: The base64-encoded ciphertext string.
+//   - error: An error if encryption or key loading fails.
+//
+// Example usage:
+//
+//	encryptedText, err := EncryptTextStringRsa("my secret message", "keys/public.pem")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	fmt.Println("Encrypted (base64):", encryptedText)
+func EncryptTextStringRsa(inputString string, path string) (string, error) {
+	publicKey, err := auth.LoadPublicKey(path)
+	if err != nil {
+		return "", err
+	}
+	input := []byte(inputString)
+	cipherText, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, input)
+	if err != nil {
+		return "", err
+	}
+
+	encodeString := base64.StdEncoding.EncodeToString(cipherText)
+	return encodeString, nil
 }
