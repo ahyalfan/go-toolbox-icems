@@ -1,8 +1,8 @@
 package dto
 
 import (
-	msg "gitlab.unsia.ac.id/icems/icems-tools/dto/message"
-	"gitlab.unsia.ac.id/icems/icems-tools/dto/pagination"
+	msg "github.com/ahyalfan/go-toolbox-icems/dto/message"
+	"github.com/ahyalfan/go-toolbox-icems/dto/pagination"
 )
 
 var APP_DEBUG bool
