@@ -1,4 +1,4 @@
-package rsa
+package restapi
 
 import (
 	"encoding/json"
@@ -25,7 +25,8 @@ type Rest[T model.Response] struct {
 	Log    *logrus.Logger
 }
 
-func (r *Rest[T]) GetData(header map[string]string) (*T, error) {
+func (r *Rest[T]) GetData(header map[string]string) (T, error) {
+	var something T
 	agent := fiber.Get(r.URL)
 
 	if r.ApiKey != "" {
@@ -42,24 +43,23 @@ func (r *Rest[T]) GetData(header map[string]string) (*T, error) {
 			"service_url": r.URL,
 			"message":     "get data failed",
 		}).Error(errs)
-		return nil, errs[0]
+		return something, errs[0]
 	}
 	if statusCode != fiber.StatusOK {
 		r.Log.WithFields(logrus.Fields{
 			"service_url": r.URL,
 			"status":      statusCode,
 		}).Error("unexpected response status")
-		return nil, fmt.Errorf("failed get data with statusCode %d", statusCode)
+		return something, fmt.Errorf("failed get data with statusCode %d", statusCode)
 	}
-	var something T
 	err := json.Unmarshal(body, &something)
 	if err != nil {
-		return nil, err
+		return something, err
 	}
-	return &something, nil
+	return something, nil
 }
 
-func (r *Rest[T]) SendDataJson(header map[string]string, req model.Request) (*T, error) {
+func (r *Rest[T]) SendDataJson(header map[string]string, req model.Request) (T, error) {
 	agent := fiber.Post(r.URL)
 	agent = agent.Set("Content-Type", string(ContentTypeJson))
 	if r.ApiKey != "" {
@@ -76,7 +76,7 @@ func (r *Rest[T]) SendDataJson(header map[string]string, req model.Request) (*T,
 	return r.SendAgent(agent)
 }
 
-func (r *Rest[T]) SendDataForm(header map[string]string, req model.Request) (*T, error) {
+func (r *Rest[T]) SendDataForm(header map[string]string, req model.Request) (T, error) {
 	agent := fiber.Post(r.URL)
 	if r.ApiKey != "" {
 		agent = agent.Set("X-API-KEY", r.ApiKey)
@@ -97,7 +97,7 @@ func (r *Rest[T]) SendDataForm(header map[string]string, req model.Request) (*T,
 	return r.SendAgent(agent)
 }
 
-func (r *Rest[T]) SendDataMultiForm(header map[string]string, req model.RequestMultiForm) (*T, error) {
+func (r *Rest[T]) SendDataMultiForm(header map[string]string, req model.RequestMultiForm) (T, error) {
 	agent := fiber.Post(r.URL)
 	if r.ApiKey != "" {
 		agent = agent.Set("X-API-KEY", r.ApiKey)
@@ -111,13 +111,21 @@ func (r *Rest[T]) SendDataMultiForm(header map[string]string, req model.RequestM
 
 	file, err := multiPartFile.Open()
 	if err != nil {
-		return nil, err
+		r.Log.WithFields(logrus.Fields{
+			"service_url": r.URL,
+		}).Error("open file failed")
+		var zero T
+		return zero, err
 	}
 	defer file.Close()
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		return nil, err
+		r.Log.WithFields(logrus.Fields{
+			"service_url": r.URL,
+		}).Error("read file failed")
+		var zero T
+		return zero, err
 	}
 	results := utils.StructToMapString(req, "form")
 	ff1 := &fiber.FormFile{
@@ -138,28 +146,28 @@ func (r *Rest[T]) SendDataMultiForm(header map[string]string, req model.RequestM
 	return r.SendAgent(agent)
 }
 
-func (r *Rest[T]) SendAgent(agent *fiber.Agent) (*T, error) {
+func (r *Rest[T]) SendAgent(agent *fiber.Agent) (T, error) {
+	var response T
 	statusCode, body, errs := agent.Bytes()
 	if len(errs) > 0 {
 		r.Log.WithFields(logrus.Fields{
 			"service_url": r.URL,
 			"message":     "send data failed",
 		}).Error(errs)
-		return nil, errs[0]
+		return response, errs[0]
 	}
 	if statusCode > 300 {
 		r.Log.WithFields(logrus.Fields{
 			"service_url": r.URL,
 			"status":      statusCode,
 		}).Error("unexpected response status")
-		return nil, fmt.Errorf("failed get data with statusCode %d", statusCode)
+		return response, fmt.Errorf("failed get data with statusCode %d", statusCode)
 	}
 
-	var response T
 	err := json.Unmarshal(body, &response)
 	if err != nil {
 		r.Log.WithError(err).Error("failed to unmarshal response")
-		return nil, err
+		return response, err
 	}
-	return &response, nil
+	return response, nil
 }
