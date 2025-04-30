@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ahyalfan/go-toolbox-icems/auth"
@@ -78,6 +79,36 @@ func DecryptTextString(input []byte, keyString string) (string, error) {
 	stream.XORKeyStream(plaintext, ciphertext)
 
 	return string(plaintext), nil
+}
+
+func DecryptAny[T any](input []byte, keyString string) (T, error) {
+	key := []byte(keyString)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	if len(input) < aes.BlockSize {
+		var zero T
+		return zero, fmt.Errorf("ciphertext too short")
+	}
+
+	iv := input[:aes.BlockSize]
+	ciphertext := input[aes.BlockSize:]
+
+	stream := cipher.NewCFBDecrypter(block, iv)
+	plaintext := make([]byte, len(ciphertext))
+	stream.XORKeyStream(plaintext, ciphertext)
+
+	var result T
+	err = json.Unmarshal(plaintext, &result)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return result, nil
 }
 
 // DecryptTextStringRsa decrypts a base64-encoded RSA-encrypted string using a private key.

@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
+	"encoding/json"
 	"io"
 
 	"github.com/ahyalfan/go-toolbox-icems/auth"
@@ -78,6 +79,27 @@ func EncryptText(input []byte, key []byte) ([]byte, error) {
 func EncryptTextString(inputString string, keyString string) ([]byte, error) {
 	key := []byte(keyString)
 	input := []byte(inputString)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	ciphertext := make([]byte, aes.BlockSize+len(input))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], input)
+
+	return ciphertext, nil
+}
+
+// any encrypt
+func EncryptAny(inputData any, keyString string) ([]byte, error) {
+	key := []byte(keyString)
+	input, _ := json.Marshal(inputData)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
