@@ -10,6 +10,10 @@ import (
 
 var key = []byte("1234567890123456") // 16, 24, atau 32 byte
 
+type Hello struct {
+	Hai string
+}
+
 func TestEncryptDecryptSucces(t *testing.T) {
 	input := []byte("nik dari keluaragra yogi")
 	e, err := utils.EncryptText(input, key)
@@ -45,4 +49,15 @@ func TestEncryptDecryptTextStringSucces(t *testing.T) {
 	fmt.Println(hasil)
 	assert.Nil(t, err)
 	assert.Equal(t, input, hasil)
+}
+
+func TestEncryptDecryptAnySucces(t *testing.T) {
+	input := Hello{Hai: "adsd"}
+	e, err := utils.EncryptAny(input, string(key))
+	assert.Nil(t, err)
+	assert.NotNil(t, e)
+
+	hasil, err := utils.DecryptAny[Hello](e, string(key))
+	assert.Nil(t, err)
+	assert.Equal(t, input.Hai, hasil.Hai)
 }
